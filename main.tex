@@ -138,8 +138,17 @@
     \begin{answer}[3. Comparação com ESP8266 e Arduino Uno.]
         \begin{itemize}
             \item \textbf{ESP32:} Microcontrolador avançado da Espressif, possui processador dual-core, conectividade Wi-Fi e Bluetooth integrados, maior quantidade de pinos de entrada/saída, suporte a múltiplos periféricos, ADCs de maior resolução e maior capacidade de processamento e memória. Ideal para aplicações IoT mais complexas e que exigem conectividade sem fio diversificada.
+                \begin{center}
+                    \includegraphics[width=0.5\textwidth]{images/esp32.png}
+                \end{center}
             \item \textbf{ESP8266:} Também da Espressif, é mais simples que o ESP32, com processador single-core, conectividade Wi-Fi integrada, menos pinos e recursos. É indicado para projetos IoT básicos que demandam apenas Wi-Fi e menor consumo de recursos.
+                \begin{center}
+                    \includegraphics[width=0.5\textwidth]{images/esp8266.png}
+                \end{center}
             \item \textbf{Arduino Uno:} Baseado no microcontrolador ATmega328P, não possui conectividade Wi-Fi ou Bluetooth nativa, mas é muito utilizado em projetos de eletrônica básica, prototipagem e ensino. Possui menos memória e processamento em relação aos ESPs, mas conta com vasta documentação e comunidade.
+                \begin{center}
+                    \includegraphics[width=0.5\textwidth]{images/arduino_uno.png}
+                \end{center}
         \end{itemize}
 
         \textbf{Resumo:} O ESP32 é o mais completo em termos de recursos e conectividade, seguido pelo ESP8266 (mais simples e barato), enquanto o Arduino Uno é ideal para projetos básicos sem necessidade de conexão sem fio.
@@ -216,6 +225,14 @@
                 delay(1000); // Espera 1 segundo
             }
             \end{verbatim}
+            O resultado será um LED piscando a cada segundo (Conforme a imagem abaixo).
+            \begin{center}
+                \includegraphics[width=0.5\textwidth]{images/led.png}
+            \end{center}
+            \begin{center}
+                \small
+                \textbf{Figura:} Imagem retirada do simulador ESP32 \href{https://wokwi.com}{wokwi.com}.
+            \end{center}
 
             \item Controle de buzzer:
 
@@ -247,6 +264,14 @@
                 delay(200); // Pausa breve antes de reiniciar
                 }
             \end{verbatim}
+            O resultado será um buzzer emitindo um som de sirene (visualmente conforme a imagem abaixo).
+            \begin{center}
+                \includegraphics[width=0.5\textwidth]{images/buzzer.png}
+            \end{center}
+            \begin{center}
+                \small
+                \textbf{Figura:} Imagem retirada do simulador ESP32 \href{https://wokwi.com}{wokwi.com}.
+            \end{center}
         \end{enumerate}
     \end{answer}
 
