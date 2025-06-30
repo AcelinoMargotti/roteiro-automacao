@@ -465,15 +465,54 @@
                     \item \texttt Configure para 115200 baud.
                     \item \texttt Veja as mensagens de conexão e o IP atribuído ao ESP32.
                 \end{itemize}
-                
+
             Com o ESP32 conectado, é possível comunicar com outros dispositivos e com a Internet usando protocolos como MQTT.
         \end{enumerate}
     \end{answer}
 
     \begin{answer}[7. Introdução ao protocolo MQTT.]
-        Quisque eget velit eget arcu rhoncus dictum non quis turpis. Nulla fermentum nulla nec vestibulum lacinia. Sed aliquam euismod dolor a efficitur. Fusce a nisi at justo vulputate tempor sed id lectus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Duis imperdiet ut dolor at varius. Pellentesque mattis turpis diam, et maximus orci aliquet id. Sed luctus a magna ac mattis. Sed ultricies quis turpis nec consequat. Donec a placerat metus, a tempor nulla. Maecenas gravida, diam sed aliquet efficitur, magna risus pulvinar orci, vel rutrum velit metus et tortor. Nam maximus, nulla eu semper scelerisque, mi sem vulputate tellus, nec hendrerit nulla ligula vel libero. Maecenas convallis pellentesque massa a ornare.
+        O protocolo MQTT é o protocolo padrão pra comunicação entre dispositivos IoT. Ele é
+        planejado pra ser extremamente leve, com o padrão de publicador / assinante que é ideal pra
+        conectar dispositivos com o mínimo de recursos possível. Ele é usado em diversas indústrias,
+        como automotiva, manufatura, telecomunicação, entre outras.
 
-        Nam rhoncus magna sit amet porttitor condimentum. Vestibulum rhoncus consectetur est nec volutpat. Mauris volutpat nisi at tortor auctor, id ornare eros tempus. Aliquam et sapien mattis, eleifend turpis et, bibendum ipsum. Quisque vel semper risus, nec aliquam dolor. Maecenas non semper risus, sagittis eleifend nunc. Cras turpis elit, vulputate in porttitor at, rutrum eget justo. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras quis placerat tellus, eget gravida nunc. Integer malesuada vitae tortor non sollicitudin. Suspendisse eu sem purus.
+        \begin{enumerate}
+            \item O padrão da indústria:
+            
+                Ele é o protocolo mais usado na indústria, porque é o que melhor funciona em dispositivos com
+                recursos limitados, com baixa largura de banda e conectividade limitada. Ele usa por baixo dos
+                panos o TCP/IP, com um formato de mensagem binária, em contraste com outros protocolos
+                que usam um formato de mensagens de texto, como o HTTP, saindo na frente no transporte de
+                dados.
+            
+            \item Modelo Publicador / Assinante:
+            \begin{itemize}
+                    \item \texttt Publicadores (publishers) enviam mensagens em tópicos.
+                    \item \texttt Assinantes (subscribers) recebem mensagens do tópico que assinaram.
+                    \item \texttt Um broker (servidor intermediário) gerencia o envio das mensagens aos clientes.
+                \end{itemize}
+            
+            É assim que funciona a comunicação entre os dispositivos com o protocolo MQTT. Ele também
+            tem outras funcionalidades interessantes, como a de sessões persistentes: se a sessão entre
+            um publicador / assinante for desconectada, a sessão vai continuar ativa mesmo assim. Uma
+            vez que a internet for conectada novamente, eles vão se conectar de novo automaticamente e
+            continuar a sessão.
+
+            Também existem outras opções que o MQTT oferece:
+
+            \begin{itemize}
+                    \item \texttt {Retenção de mensagens:}  É possível configurar mensagens como "retidas", assim quando novos assinantes assinam um tópico, eles recebem imediatamente a última mensagem publicada.
+                    \item \texttt {Qualidade de serviço (QoS):}Oferece três níveis de entrega de mensagens:
+                        \begin{itemize}
+                            \item QoS 0: Entrega no mínimo uma vez (sem garantia de entrega).
+                            \item QoS 1: Entrega pelo menos uma vez (pode haver duplicação).
+                            \item QoS 2: Entrega exatamente uma vez (garantia de entrega sem duplicação).
+                        \end{itemize}
+                    \item \texttt {Mensagens com última vontade (Last will and testament):} Permite que o cliente defina uma mensagem que será enviada se ele se desconectar de forma inesperada. É útil pra detectar falhas em dispositivos.
+                \end{itemize}
+
+        \end{enumerate}
+
     \end{answer}
 
     \begin{answer}[8. Publicando dados do sensor em um broker MQTT.]
@@ -486,16 +525,6 @@
         Quisque eget velit eget arcu rhoncus dictum non quis turpis. Nulla fermentum nulla nec vestibulum lacinia. Sed aliquam euismod dolor a efficitur. Fusce a nisi at justo vulputate tempor sed id lectus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Duis imperdiet ut dolor at varius. Pellentesque mattis turpis diam, et maximus orci aliquet id. Sed luctus a magna ac mattis. Sed ultricies quis turpis nec consequat. Donec a placerat metus, a tempor nulla. Maecenas gravida, diam sed aliquet efficitur, magna risus pulvinar orci, vel rutrum velit metus et tortor. Nam maximus, nulla eu semper scelerisque, mi sem vulputate tellus, nec hendrerit nulla ligula vel libero. Maecenas convallis pellentesque massa a ornare.
 
         Nam rhoncus magna sit amet porttitor condimentum. Vestibulum rhoncus consectetur est nec volutpat. Mauris volutpat nisi at tortor auctor, id ornare eros tempus. Aliquam et sapien mattis, eleifend turpis et, bibendum ipsum. Quisque vel semper risus, nec aliquam dolor. Maecenas non semper risus, sagittis eleifend nunc. Cras turpis elit, vulputate in porttitor at, rutrum eget justo. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras quis placerat tellus, eget gravida nunc. Integer malesuada vitae tortor non sollicitudin. Suspendisse eu sem purus.
-    \end{answer}
-
-    \begin{answer}[10. Projeto Final – Estação IoT com sensor + LED.]
-        Quisque eget velit eget arcu rhoncus dictum non quis turpis. Nulla fermentum nulla nec vestibulum lacinia. Sed aliquam euismod dolor a efficitur. Fusce a nisi at justo vulputate tempor sed id lectus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Duis imperdiet ut dolor at varius. Pellentesque mattis turpis diam, et maximus orci aliquet id. Sed luctus a magna ac mattis. Sed ultricies quis turpis nec consequat. Donec a placerat metus, a tempor nulla. Maecenas gravida, diam sed aliquet efficitur, magna risus pulvinar orci, vel rutrum velit metus et tortor. Nam maximus, nulla eu semper scelerisque, mi sem vulputate tellus, nec hendrerit nulla ligula vel libero. Maecenas convallis pellentesque massa a ornare.
-
-        Nam rhoncus magna sit amet porttitor condimentum. Vestibulum rhoncus consectetur est nec volutpat. Mauris volutpat nisi at tortor auctor, id ornare eros tempus. Aliquam et sapien mattis, eleifend turpis et, bibendum ipsum. Quisque vel semper risus, nec aliquam dolor. Maecenas non semper risus, sagittis eleifend nunc. Cras turpis elit, vulputate in porttitor at, rutrum eget justo. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras quis placerat tellus, eget gravida nunc. Integer malesuada vitae tortor non sollicitudin. Suspendisse eu sem purus.
-    \end{answer}
-
-    \begin{answer}[11. Encerramento e Discussão de Aplicações Reais.]
-        //aqui eu faço depois
     \end{answer}
 
 \end{document}
