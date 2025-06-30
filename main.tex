@@ -14,6 +14,7 @@
 
 \usepackage{amsmath,amssymb,bm}
 \usepackage{hyperref}
+\usepackage[T1]{fontenc}
 
 
 \begin{document}
@@ -276,9 +277,197 @@
     \end{answer}
 
     \begin{answer}[6. Conectando o ESP32 a uma rede Wi-Fi.]
-        Quisque eget velit eget arcu rhoncus dictum non quis turpis. Nulla fermentum nulla nec vestibulum lacinia. Sed aliquam euismod dolor a efficitur. Fusce a nisi at justo vulputate tempor sed id lectus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Duis imperdiet ut dolor at varius. Pellentesque mattis turpis diam, et maximus orci aliquet id. Sed luctus a magna ac mattis. Sed ultricies quis turpis nec consequat. Donec a placerat metus, a tempor nulla. Maecenas gravida, diam sed aliquet efficitur, magna risus pulvinar orci, vel rutrum velit metus et tortor. Nam maximus, nulla eu semper scelerisque, mi sem vulputate tellus, nec hendrerit nulla ligula vel libero. Maecenas convallis pellentesque massa a ornare.
+        \begin{enumerate}
+            \item Biblioteca WiFi\.h:
+            
+            Para conectar o ESP32 a uma rede Wi-Fi, utilizamos a biblioteca WiFi.h, que já vem incluída no pacote ESP32 da IDE Arduino. Esta biblioteca fornece todas as funções necessárias para gerenciar conexões Wi-Fi..
 
-        Nam rhoncus magna sit amet porttitor condimentum. Vestibulum rhoncus consectetur est nec volutpat. Mauris volutpat nisi at tortor auctor, id ornare eros tempus. Aliquam et sapien mattis, eleifend turpis et, bibendum ipsum. Quisque vel semper risus, nec aliquam dolor. Maecenas non semper risus, sagittis eleifend nunc. Cras turpis elit, vulputate in porttitor at, rutrum eget justo. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras quis placerat tellus, eget gravida nunc. Integer malesuada vitae tortor non sollicitudin. Suspendisse eu sem purus.
+            \begin{verbatim}
+            #include <WiFi.h>
+            \end{verbatim}
+
+            \item Configuração básica de conexão Wi-Fi:
+
+                Exemplo básico de como conectar o ESP32 a uma rede Wi-Fi fornecendo o SSID e senha:
+
+            \begin{verbatim}
+            #include <WiFi.h>
+
+            const char* ssid = "NOME_DA_SUA_REDE";
+            const char* password = "SENHA_DA_SUA_REDE";
+
+            void setup() {
+                Serial.begin(115200);
+
+                WiFi.begin(ssid, password);
+                Serial.print("Conectando à rede Wi-Fi");
+
+                while (WiFi.status() != WL_CONNECTED) {
+                    delay(1000);
+                    Serial.print(".");
+                }
+
+                Serial.println();
+                Serial.println("Conectado com sucesso!");
+                Serial.print("Endereço IP: ");
+                Serial.println(WiFi.localIP());
+            }
+
+            void loop() {
+            // Código principal aqui
+            }
+
+            \end{verbatim}
+        
+            \item Verificação do status da conexão:
+
+                Código para verificar o status da conexão e exibir informações sobre a rede Wi-Fi:
+            \begin{verbatim}
+                #include <WiFi.h>
+
+                const char* ssid = "NOME_DA_SUA_REDE";
+                const char* password = "SENHA_DA_SUA_REDE";
+
+                void setup() {
+                Serial.begin(115200);
+
+                WiFi.begin(ssid, password);
+                Serial.print("Conectando à rede Wi-Fi");
+
+                int tentativas = 0;
+                while (WiFi.status() != WL_CONNECTED && tentativas < 20) {
+                    delay(1000);
+                    Serial.print(".");
+                    tentativas++;
+                }
+
+                if (WiFi.status() == WL_CONNECTED) {
+                    Serial.println();
+                    Serial.println("Conectado com sucesso!");
+                    Serial.print("SSID: ");
+                    Serial.println(WiFi.SSID());
+                    Serial.print("Endereço IP: ");
+                    Serial.println(WiFi.localIP());
+                    Serial.print("Intensidade do sinal (RSSI): ");
+                    Serial.println(WiFi.RSSI());
+                } else {
+                    Serial.println();
+                    Serial.println("Falha na conexão Wi-Fi!");
+                    Serial.println("Verifique as credenciais da rede.");
+                }
+                }
+
+                void loop() {
+                if (WiFi.status() == WL_CONNECTED) {
+                    Serial.println("Wi-Fi conectado");
+                } else {
+                    Serial.println("Wi-Fi desconectado - tentando reconectar...");
+                    WiFi.begin(ssid, password);
+                }
+
+                delay(10000);
+                }
+            \end{verbatim}
+        
+            \item Códigos de status Wi-Fi:
+
+                Principais códigos de status retornados por WiFi.status():
+                    \begin{itemize}
+                        \item \texttt{WL\_CONNECTED} (3): Conectado com sucesso.
+                        \item \texttt{WL\_NO\_SSID\_AVAIL} (1): SSID não encontrado.
+                        \item \texttt{WL\_CONNECT\_FAILED}: (4) Falha na conexão por senha incorreta.   
+                        \item \texttt{WL\_CONNECTION\_LOST}: A conexão com a rede Wi-Fi foi perdida.
+                        \item \texttt{WL\_DISCONNECTED}: O ESP32 está desconectado da rede Wi-Fi.
+                    \end{itemize}
+            
+            \item Exemplo completo com reconexão automática:
+
+                Código completo com reconexão automática à rede Wi-Fi:
+            \begin{verbatim}
+                #include <WiFi.h>
+
+                const char* ssid = "NOME_DA_SUA_REDE";
+                const char* password = "SENHA_DA_SUA_REDE";
+
+                void conectarWiFi() {
+                WiFi.begin(ssid, password);
+
+                Serial.print("Conectando à rede Wi-Fi");
+
+                int tentativas = 0;
+                while (WiFi.status() != WL_CONNECTED && tentativas < 20) {
+                    delay(1000);
+                    Serial.print(".");
+                    tentativas++;
+                }
+
+                if (WiFi.status() == WL_CONNECTED) {
+                    Serial.println();
+                    Serial.println("OK Conectado com sucesso!");
+                    exibirInformacoesRede();
+                } else {
+                    Serial.println();
+                    Serial.println("X Falha na conexão Wi-Fi!");
+                }
+                }
+
+                void exibirInformacoesRede() {
+                    Serial.println("=== Informações da Rede ===");
+                    Serial.print("SSID: ");
+                    Serial.println(WiFi.SSID());
+                    Serial.print("Endereço IP: ");
+                    Serial.println(WiFi.localIP());
+                    Serial.print("Gateway: ");
+                    Serial.println(WiFi.gatewayIP());
+                    Serial.print("Máscara de sub-rede: ");
+                    Serial.println(WiFi.subnetMask());
+                    Serial.print("DNS: ");
+                    Serial.println(WiFi.dnsIP());
+                    Serial.print("Intensidade do sinal (RSSI): ");
+                    Serial.print(WiFi.RSSI());
+                    Serial.println(" dBm");
+                    Serial.println("===========================");
+                }
+
+                void setup() {
+                    Serial.begin(115200);
+                    WiFi.mode(WIFI_STA);
+                    conectarWiFi();
+                }
+
+                void loop() {
+                if (WiFi.status() != WL_CONNECTED) {
+                    Serial.println("Conexão Wi-Fi perdida. Tentando reconectar...");
+                    conectarWiFi();
+                } else {
+                    Serial.println("Wi-Fi conectado - Sistema funcionando normalmente");
+                }
+
+                delay(30000);
+                }
+            \end{verbatim}
+        
+            \item Explicação do código:
+
+                Dicas importantes:
+                \begin{itemize}
+                        \item \texttt Substitua as credenciais da rede pelos seus dados reais.
+                        \item \texttt RSSI próximo de 0 indica sinal forte. Mais negativo = mais fraco.
+                        \item \texttt{WiFi.mode(WIFI\_STA)} configura o ESP32 como cliente Wi-Fi.
+                        \item Outros modos: \texttt{WIFI\_AP} (Access Point), \texttt{WIFI\_AP\_STA} (modo misto).
+                        \item \texttt Definir limite de tentativas evita travamento se a rede estiver indisponível.
+                    \end{itemize}
+
+            \item Testando a conexão:
+            
+                \begin{itemize}
+                    \item \texttt Após carregar o código, abra o Monitor Serial (Ctrl+Shift+M).
+                    \item \texttt Configure para 115200 baud.
+                    \item \texttt Veja as mensagens de conexão e o IP atribuído ao ESP32.
+                \end{itemize}
+                
+            Com o ESP32 conectado, é possível comunicar com outros dispositivos e com a Internet usando protocolos como MQTT.
+        \end{enumerate}
     \end{answer}
 
     \begin{answer}[7. Introdução ao protocolo MQTT.]
