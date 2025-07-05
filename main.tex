@@ -516,9 +516,154 @@
     \end{answer}
 
     \begin{answer}[8. Publicando dados do sensor em um broker MQTT.]
-        Quisque eget velit eget arcu rhoncus dictum non quis turpis. Nulla fermentum nulla nec vestibulum lacinia. Sed aliquam euismod dolor a efficitur. Fusce a nisi at justo vulputate tempor sed id lectus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Duis imperdiet ut dolor at varius. Pellentesque mattis turpis diam, et maximus orci aliquet id. Sed luctus a magna ac mattis. Sed ultricies quis turpis nec consequat. Donec a placerat metus, a tempor nulla. Maecenas gravida, diam sed aliquet efficitur, magna risus pulvinar orci, vel rutrum velit metus et tortor. Nam maximus, nulla eu semper scelerisque, mi sem vulputate tellus, nec hendrerit nulla ligula vel libero. Maecenas convallis pellentesque massa a ornare.
+        Como Publicar Dados de um Sensor em um Broker MQTT Usando um ESP32:
 
-        Nam rhoncus magna sit amet porttitor condimentum. Vestibulum rhoncus consectetur est nec volutpat. Mauris volutpat nisi at tortor auctor, id ornare eros tempus. Aliquam et sapien mattis, eleifend turpis et, bibendum ipsum. Quisque vel semper risus, nec aliquam dolor. Maecenas non semper risus, sagittis eleifend nunc. Cras turpis elit, vulputate in porttitor at, rutrum eget justo. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras quis placerat tellus, eget gravida nunc. Integer malesuada vitae tortor non sollicitudin. Suspendisse eu sem purus.
+        O protocolo MQTT (Message Queuing Telemetry Transport) é ideal para aplicações de IoT devido à sua leveza e eficiência. Com um ESP32, é possível coletar dados de um sensor e publicá-los em um broker MQTT de forma simples. Abaixo estão os passos para configurar e implementar essa tarefa.
+
+        \begin{enumerate}
+            \item Escolha e Configure o Broker MQTT:
+            
+            O broker MQTT é o servidor que gerencia as mensagens entre dispositivos. Você pode usar:
+                \begin{itemize}
+                    \item \textbf{Broker local:} Instale o Mosquitto em um computador ou servidor:
+                    \begin{verbatim}
+                    sudo apt-get install mosquitto mosquitto-clients
+                    \end{verbatim}
+                    \item \textbf{Broker na nuvem:} Serviços como HiveMQ Cloud ou Adafruit IO são boas opções. Crie uma conta para obter o endereço do broker, porta (geralmente 1883 para conexões não seguras ou 8883 para TLS), usuário e senha (se necessário).
+                    \item Certifique-se de que o broker está acessível e as portas estão abertas.
+                \end{itemize}
+            
+            \item Conecte o Sensor ao ESP32:
+            Conecte o sensor ao ESP32. Neste exemplo, usaremos um sensor de temperatura e umidade DHT11:
+            \begin{itemize}
+                \item \textbf{Pino de dados do DHT11:} Conecte a um pino GPIO, como o GPIO 4.
+                \item \textbf{Alimentação:} Conecte VCC ao 3,3V e GND ao GND do ESP32.
+                \item Adicione um resistor pull-up de $4.7\,\mathrm{k}\Omega$ a $10\,\mathrm{k}\Omega$ entre o pino de dados e o VCC, se necessário.
+                \item Instale a biblioteca DHT sensor library no Arduino IDE para facilitar a leitura do sensor.
+            \end{itemize}
+
+            \item Configure o Ambiente de Programação:
+            
+            \begin{itemize}
+                \item \textbf{Arduino IDE:} Instale o suporte ao ESP32 no Arduino IDE (em "Placas" > "Gerenciador de Placas", procure por "ESP32").
+                \item \textbf{Bibliotecas:} Instale as bibliotecas PubSubClient (para MQTT) e WiFi (já inclusa no suporte ao ESP32).
+                \item Configure o Wi-Fi do ESP32 com o SSID e a senha da sua rede.
+            \end{itemize}
+
+            \item Escreva o Código para o ESP32:
+            
+            O código abaixo lê a temperatura do sensor DHT11 e a publica em um tópico MQTT. Substitua as variáveis com suas configurações específicas:
+            \begin{verbatim}
+            #include <WiFi.h>
+            #include <PubSubClient.h>
+            #include <DHT.h>
+
+            // Configurações de Wi-Fi
+            const char* ssid = "SUA_REDE_WIFI";
+            const char* password = "SUA_SENHA_WIFI";
+
+            // Configurações do broker MQTT
+            const char* mqtt_server = "SEU_BROKER_MQTT"; // ex: broker.hivemq.com
+            const int mqtt_port = 1883;
+            const char* mqtt_user = "SEU_USUARIO"; // Opcional
+            const char* mqtt_password = "SUA_SENHA"; // Opcional
+            const char* mqtt_topic = "esp32/temperatura";
+
+            // Configurações do sensor DHT
+            #define DHTPIN 4 // Pino GPIO conectado ao DHT11
+            #define DHTTYPE DHT11
+            DHT dht(DHTPIN, DHTTYPE);
+
+            WiFiClient espClient;
+            PubSubClient client(espClient);
+
+            void setup() {
+                Serial.begin(115200);
+                dht.begin();
+
+                // Conectar ao Wi-Fi
+                WiFi.begin(ssid, password);
+                while (WiFi.status() != WL_CONNECTED) {
+                    delay(1000);
+                    Serial.println("Conectando ao WiFi...");
+                }
+                Serial.println("Conectado ao WiFi");
+
+                // Configurar o broker MQTT
+                client.setServer(mqtt_server, mqtt_port);
+                }
+
+            void reconnect() {
+                while (!client.connected()) {
+                    Serial.println("Conectando ao broker MQTT...");
+                    String clientId = "ESP32Client-" + String(random(0xffff), HEX);
+                    if (client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
+                        Serial.println("Conectado ao broker MQTT");
+                    } else {
+                        Serial.print("Falha na conexão, rc=");
+                        Serial.print(client.state());
+                        delay(5000);
+                    }
+                }
+            }
+
+            void loop() {
+                if (!client.connected()) {
+                    reconnect();
+                }
+                client.loop();
+
+                // Ler dados do sensor
+                float temperatura = dht.readTemperature();
+                if (isnan(temperatura)) {
+                    Serial.println("Erro ao ler o sensor DHT11!");
+                    delay(2000);
+                    return;
+                }
+
+                // Publicar dados no tópico
+                String payload = String(temperatura);
+                client.publish(mqtt_topic, payload.c_str());
+                Serial.println("Temperatura publicada: " + payload + " °C");
+
+                delay(5000); // Publica a cada 5 segundos
+            }
+            \end{verbatim}
+
+            \item Escolha do Tópico:
+            
+            Escolha um tópico descritivo, como esp32/temperatura. Tópicos são organizados hierarquicamente (ex.: dispositivo/local/variável) para facilitar o gerenciamento.
+
+            \item Teste a Publicação:
+            \begin{itemize}
+                \item \textbf{Carregue o código:} Use o Arduino IDE para compilar e carregar o código no ESP32.
+                \item \textbf{Monitore via Serial:} Abra o Monitor Serial (115200 baud) para verificar a conexão Wi-Fi, a conexão com o broker e os dados do sensor.
+                \item \textbf{Verifique os dados no broker:} Use um cliente MQTT (como MQTT Explorer ou o comando \texttt{mosquitto\_sub}) para assinar o tópico e confirmar a recepção dos dados:
+                \begin{verbatim}
+                mosquitto_sub -h SEU_BROKER -t esp32/temperatura
+                \end{verbatim}
+            \end{itemize}
+
+            \item Segurança (Opcional):
+            
+            Para Maior segurança:
+            \begin{itemize}
+                \item Use MQTT com TLS/SSL (porta 8883) e configure certificados no ESP32.
+                \item Adicione autenticação com usuário e senha no broker.
+                \item Considere criptografar os dados do sensor, se necessário.
+            \end{itemize}
+
+            \item Dicas Adicionais:
+            \begin{itemize}
+                \item \textbf{Qualidade de Serviço (QoS):} No método client.publish, você pode especificar o nível de QoS (0, 1 ou 2) como um parâmetro adicional, dependendo da confiabilidade desejada.
+                \item \textbf{Reconexão automática:} O código inclui uma função reconnect() para lidar com desconexões.
+                \item \textbf{Outros sensores:} Para sensores diferentes (como BMP280 ou DS18B20), ajuste a leitura no código, mantendo a estrutura de publicação MQTT.
+            \end{itemize}
+
+            \item Conclusão:
+            
+            Com um ESP32, é possível publicar dados de um sensor em um broker MQTT de forma eficiente usando a biblioteca PubSubClient. O exemplo acima usa um sensor DHT11, mas pode ser adaptado para outros sensores. Teste a conexão, monitore os dados e, se necessário, implemente segurança para aplicações reais. 
+                \end{enumerate}
     \end{answer}
 
     \begin{answer}[9. Recebendo comandos MQTT para controle de atuadores.]
