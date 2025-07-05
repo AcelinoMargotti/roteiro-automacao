@@ -1,4 +1,4 @@
-# Roteiro de Automação
+# Roteiro de Atividades Integrando ESP-32 com IoT 
 
 Este projeto contém o arquivo principal `main.tex`, que é um roteiro de automação escrito em LaTeX. O objetivo é fornecer um guia estruturado para atividades relacionadas à automação, facilitando a leitura, edição e distribuição do conteúdo em formato PDF.
 
