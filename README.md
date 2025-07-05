@@ -21,7 +21,7 @@ Repita o comando se necessário para atualizar referências.
 
 Você pode visualizar o PDF diretamente em seu navegador ou usando um leitor de PDF de sua preferência.
 
-Se desejar incorporar um visualizador de PDF neste README (GitHub não suporta visualização direta), utilize o link abaixo para baixar ou visualizar:
+Utilize o link abaixo para baixar ou visualizar:
 
 [Visualizar main.pdf](./main.pdf)
 
