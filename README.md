@@ -1,7 +1,8 @@
-# Roteiro de Automação
-[![Assista à explicação no YouTube](https://img.shields.io/badge/Assista%20no-YouTube-red?logo=youtube)](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+# Roteiro de Atividades Integrando ESP-32 com IoT 
 
 Este projeto contém o arquivo principal `main.tex`, que é um roteiro de automação escrito em LaTeX. O objetivo é fornecer um guia estruturado para atividades relacionadas à automação, facilitando a leitura, edição e distribuição do conteúdo em formato PDF.
+
+[![Assista à explicação no YouTube](https://img.shields.io/badge/Assista%20no-YouTube-red?logo=youtube)](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 
 ## Estrutura do Projeto
 
@@ -22,7 +23,7 @@ Repita o comando se necessário para atualizar referências.
 
 Você pode visualizar o PDF diretamente em seu navegador ou usando um leitor de PDF de sua preferência.
 
-Se desejar incorporar um visualizador de PDF neste README (GitHub não suporta visualização direta), utilize o link abaixo para baixar ou visualizar:
+Utilize o link abaixo para baixar ou visualizar:
 
 [Visualizar main.pdf](./main.pdf)
 
