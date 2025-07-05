@@ -667,9 +667,212 @@
     \end{answer}
 
     \begin{answer}[9. Recebendo comandos MQTT para controle de atuadores.]
-        Quisque eget velit eget arcu rhoncus dictum non quis turpis. Nulla fermentum nulla nec vestibulum lacinia. Sed aliquam euismod dolor a efficitur. Fusce a nisi at justo vulputate tempor sed id lectus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Duis imperdiet ut dolor at varius. Pellentesque mattis turpis diam, et maximus orci aliquet id. Sed luctus a magna ac mattis. Sed ultricies quis turpis nec consequat. Donec a placerat metus, a tempor nulla. Maecenas gravida, diam sed aliquet efficitur, magna risus pulvinar orci, vel rutrum velit metus et tortor. Nam maximus, nulla eu semper scelerisque, mi sem vulputate tellus, nec hendrerit nulla ligula vel libero. Maecenas convallis pellentesque massa a ornare.
+        Recebendo Comandos MQTT para Controle de Atuadores com ESP32
 
-        Nam rhoncus magna sit amet porttitor condimentum. Vestibulum rhoncus consectetur est nec volutpat. Mauris volutpat nisi at tortor auctor, id ornare eros tempus. Aliquam et sapien mattis, eleifend turpis et, bibendum ipsum. Quisque vel semper risus, nec aliquam dolor. Maecenas non semper risus, sagittis eleifend nunc. Cras turpis elit, vulputate in porttitor at, rutrum eget justo. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras quis placerat tellus, eget gravida nunc. Integer malesuada vitae tortor non sollicitudin. Suspendisse eu sem purus.
+        O protocolo MQTT, descrito na página 11 do documento, opera no modelo publicador/assinante, permitindo que dispositivos como o ESP32 publiquem dados em tópicos e assinem tópicos para receber mensagens. Para controlar atuadores (como LEDs, relés ou motores), o ESP32 pode assinar um tópico MQTT, receber comandos enviados por outro dispositivo ou aplicação e atuar sobre um pino GPIO com base nesses comandos. Este texto explica como configurar o ESP32 para receber comandos MQTT e controlar um atuador, usando como exemplo um LED conectado a um pino GPIO.
+
+        \begin{enumerate}
+
+            \item {Pré-requisitos}
+
+            Antes de começar, certifique-se de que:
+            \begin{itemize}
+                \item O ambiente do Arduino IDE está configurado para o ESP32.
+                \item O ESP32 está conectado a um sensor e a um atuador (ex.: um LED conectado ao GPIO 5).
+                \item Um broker MQTT está configurado (local, como Mosquitto, ou na nuvem, como HiveMQ Cloud), com endereço, porta (1883 ou 8883 para TLS), usuário e senha, se necessário.
+                \item As bibliotecas WiFi, PubSubClient e DHT estão instaladas no Arduino IDE.
+            \end{itemize}
+
+            \item{Conexão do Atuador ao ESP32}
+
+            Conecte o atuador ao ESP32. Para este exemplo, usaremos um LED:
+            \begin{itemize}
+                \item \textbf{Pino do LED:} Conecte o ânodo (perna longa) ao GPIO 5 e o cátodo (perna curta) ao GND, com um resistor de 220$\Omega$ a 330$\Omega$ em série para limitar a corrente.
+                \item Alternativamente, use um relé ou outro atuador compatível com os níveis de tensão do ESP32 (3,3V para sinais lógicos).
+                \item Verifique se o pino escolhido (GPIO 5) suporta saída digital, conforme descrito na página 4 do documento sobre leitura de sensores analógicos e digitais.
+            \end{itemize}
+
+            \item{Configuração do Código}
+
+            O código a seguir adapta o exemplo anterior (publicação de dados do sensor DHT11) para incluir a assinatura de um tópico MQTT e o controle de um LED com base em comandos recebidos. O ESP32 assina o tópico \texttt{esp32/comando} para receber mensagens como "ON" ou "OFF" e controla o LED no GPIO 5. A reconexão automática ao Wi-Fi e ao broker MQTT, também é implementada.
+
+            \begin{verbatim}
+            #include <WiFi.h>
+            #include <PubSubClient.h>
+            #include <DHT.h>
+
+            // Configurações de Wi-Fi
+            const char* ssid = "NOME_DA_SUA_REDE";
+            const char* password = "SENHA_DA_SUA_REDE";
+
+            // Configurações do broker MQTT
+            const char* mqtt_server = "SEU_BROKER_MQTT"; // ex.: broker.hivemq.com
+            const int mqtt_port = 1883;
+            const char* mqtt_user = "SEU_USUARIO"; // Opcional
+            const char* mqtt_password = "SUA_SENHA"; // Opcional
+            const char* mqtt_topic_sensor = "esp32/temperatura";
+            const char* mqtt_topic_comando = "esp32/comando";
+
+            // Configurações do sensor DHT e do atuador
+            #define DHTPIN 4 // Pino GPIO conectado ao DHT11
+            #define DHTTYPE DHT11
+            #define LED_PIN 5 // Pino GPIO conectado ao LED
+            DHT dht(DHTPIN, DHTTYPE);
+
+            WiFiClient espClient;
+            PubSubClient client(espClient);
+
+            void connectarWiFi() {
+            WiFi.begin(ssid, password);
+            Serial.print("Conectando à rede Wi-Fi");
+            int tentativas = 0;
+            while (WiFi.status() != WL_CONNECTED && tentativas < 20) {
+                delay(1000);
+                Serial.print(".");
+                tentativas++;
+            }
+            if (WiFi.status() == WL_CONNECTED) {
+                Serial.println("\nConectado ao Wi-Fi");
+            } else {
+                Serial.println("\nFalha na conexão Wi-Fi");
+            }
+            }
+
+            void callback(char* topic, byte* payload, unsigned int length) {
+            // Processar mensagem recebida
+            String mensagem;
+            for (unsigned int i = 0; i < length; i++) {
+                mensagem += (char)payload[i];
+            }
+            Serial.println("Mensagem recebida no tópico [" + String(topic) + "]: " + mensagem);
+
+            // Controlar o LED com base na mensagem
+            if (mensagem == "ON") {
+                digitalWrite(LED_PIN, HIGH);
+                Serial.println("LED ligado");
+            } else if (mensagem == "OFF") {
+                digitalWrite(LED_PIN, LOW);
+                Serial.println("LED desligado");
+            }
+            }
+
+            void reconnectMQTT() {
+            while (!client.connected()) {
+                Serial.println("Conectando ao broker MQTT...");
+                String clientId = "ESP32Client-" + String(random(0xffff), HEX);
+                if (client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
+                Serial.println("Conectado ao broker MQTT");
+                // Assinar o tópico de comandos
+                client.subscribe(mqtt_topic_comando, 1); // QoS 1
+                } else {
+                Serial.print("Falha na conexão, rc=");
+                Serial.print(client.state());
+                delay(5000);
+                }
+            }
+            }
+
+            void setup() {
+            Serial.begin(115200);
+            dht.begin();
+            pinMode(LED_PIN, OUTPUT); // Configurar o pino do LED como saída
+            digitalWrite(LED_PIN, LOW); // Iniciar com LED desligado
+            connectarWiFi();
+            client.setServer(mqtt_server, mqtt_port);
+            client.setCallback(callback); // Definir a função de callback para mensagens recebidas
+            }
+
+            void loop() {
+            if (WiFi.status() != WL_CONNECTED) {
+                connectarWiFi();
+            }
+            if (!client.connected()) {
+                reconnectMQTT();
+            }
+            client.loop();
+
+            // Ler e publicar dados do sensor
+            float temperatura = dht.readTemperature();
+            if (!isnan(temperatura)) {
+                String payload = String(temperatura);
+                client.publish(mqtt_topic_sensor, payload.c_str(), true); // QoS 1, mensagem retida
+                Serial.println("Temperatura publicada: " + payload + " °C");
+            } else {
+                Serial.println("Erro ao ler o sensor DHT11!");
+            }
+
+            delay(5000); // Publica e verifica mensagens a cada 5 segundos
+            }
+            \end{verbatim}
+
+            \item{Explicação do Código}
+
+                \begin{itemize}
+                    \item \textbf{Configuração inicial:}
+                    \begin{itemize}
+                        \item O pino do LED (GPIO 5) é configurado como saída com \texttt{pinMode(LED\_PIN, OUTPUT)}.
+                        \item A função \texttt{connectarWiFi()} implementa a reconexão automática ao Wi-Fi, com até 20 tentativas.
+                    \end{itemize}
+                    \item \textbf{Conexão MQTT:}
+                    \begin{itemize}
+                        \item A função \texttt{reconnectMQTT()} conecta ao broker e assina o tópico \texttt{esp32/comando} com QoS 1.
+                        \item A função \texttt{client.setCallback(callback)} define a função que processa mensagens recebidas.
+                    \end{itemize}
+                    \item \textbf{Leitura do sensor:}
+                    \begin{itemize}
+                        \item O sensor DHT11 é lido a cada 5 segundos, e a temperatura é publicada no tópico \texttt{esp32/temperatura} com QoS 1 e mensagem retida.
+                    \end{itemize}
+                    \item \textbf{Processamento de comandos:}
+                    \begin{itemize}
+                        \item A função \texttt{callback} é chamada quando uma mensagem é recebida no tópico \texttt{esp32/comando}.
+                        \item A mensagem é convertida em uma string e comparada com "ON" ou "OFF" para ligar ou desligar o LED usando \texttt{digitalWrite}.
+                    \end{itemize}
+                    \item \textbf{Tópicos:}
+                    \begin{itemize}
+                        \item \texttt{esp32/temperatura}: Para publicar dados do sensor.
+                        \item \texttt{esp32/comando}: Para receber comandos do atuador.
+                    \end{itemize}
+                \end{itemize}
+
+            \item{Teste do Controle do Atuador}
+
+                \begin{itemize}
+                    \item \textbf{Carregue o código:} Compile e carregue o código no ESP32 usando o Arduino IDE.
+                    \item \textbf{Monitore via Serial:} Abra o Monitor Serial (115200 baud) para verificar conexões Wi-Fi e MQTT, leituras do sensor e comandos recebidos.
+                    \item \textbf{Envie comandos MQTT:} Use um cliente MQTT (ex.: MQTT Explorer ou \texttt{mosquitto\_pub}) para publicar comandos no tópico \texttt{esp32/comando}:
+                    \begin{itemize}
+                        \item \texttt{mosquitto\_pub -h SEU\_BROKER -t esp32/comando -m "ON"}
+                        \item \texttt{mosquitto\_pub -h SEU\_BROKER -t esp32/comando -m "OFF"}
+                    \end{itemize}
+                    \item \textbf{Verifique o atuador:} Confirme se o LED liga ou desliga conforme os comandos enviados. No Monitor Serial, você verá mensagens como "LED ligado" ou "LED desligado".
+                    \item \textbf{Debug:} Verifique erros no Monitor Serial, como falhas de conexão (\texttt{WL\_NO\_SSID\_AVAIL}, \texttt{WL\_CONNECT\_FAILED}) ou problemas com o broker MQTT (\texttt{client.state()}).
+                \end{itemize}
+
+            \item{Protocolo MQTT e Controle de Atuadores}
+
+                O MQTT é ideal para controle de atuadores devido ao seu modelo publicador/assinante:
+                \begin{itemize}
+                    \item \textbf{Publicadores:} Um dispositivo ou aplicação (ex.: um aplicativo web ou celular) publica comandos como "ON" ou "OFF" no tópico \texttt{esp32/comando}.
+                    \item \textbf{Assinantes:} O ESP32 assina o tópico e recebe os comandos, atuando sobre o GPIO.
+                    \item \textbf{Broker:} Gerencia a entrega das mensagens, suportando QoS (neste caso, QoS 1 para entrega garantida) e mensagens retidas (a última mensagem é armazenada para novos assinantes).
+                    \item \textbf{Vantagens:} Baixo consumo de banda, reconexão automática em caso de falhas de rede e suporte a dispositivos com recursos limitados, como o ESP32.
+                \end{itemize}
+
+            \item{Segurança (Opcional)}
+
+                \begin{itemize}
+                    \item Use MQTT com TLS/SSL (porta 8883) para proteger os comandos, configurando certificados no ESP32.
+                    \item Adicione autenticação com usuário e senha no broker.
+                    \item Considere validar os comandos recebidos (ex.: aceitar apenas "ON" ou "OFF") para evitar ações indesejadas.
+                \end{itemize}
+
+            \item{Vantagens do ESP32}
+
+            O ESP32 é ideal para este projeto devido ao seu processador dual-core, Wi-Fi integrado e múltiplos pinos GPIO, que permitem controlar atuadores e ler sensores simultaneamente. Comparado ao ESP8266 (single-core, menos pinos) ou Arduino Uno (sem Wi-Fi nativo), o ESP32 é mais versátil para IoT.
+
+        \item {Conclusão}
+
+            Este texto detalha como configurar um ESP32 para receber comandos MQTT e controlar um atuador (LED no GPIO 5), mantendo a funcionalidade de publicar dados de um sensor (DHT11). O código inclui reconexão automática ao Wi-Fi e MQTT, assinatura de tópicos com QoS 1 e processamento de comandos. Para testar, envie comandos via um cliente MQTT e verifique o comportamento do atuador.
+        \end{enumerate}
     \end{answer}
-
 \end{document}
